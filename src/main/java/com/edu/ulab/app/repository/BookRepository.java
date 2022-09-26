@@ -6,11 +6,17 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 
 import javax.persistence.LockModeType;
+import javax.transaction.Transactional;
+import java.util.List;
 import java.util.Optional;
 
 public interface BookRepository extends CrudRepository<Book, Long> {
 
+    @Transactional
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("select b from Book b where b.id = :id")
-    Optional<Book> findByIdForUpdate(long id);
+    void deleteByUserId(Long userId);
+
+    @Query("select b.id from Book b where b.userId = :userId")
+    Optional <List<Long>> getBooksByUserId(Long userId);
+
 }

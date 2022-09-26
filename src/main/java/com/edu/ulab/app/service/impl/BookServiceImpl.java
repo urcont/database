@@ -5,46 +5,71 @@ import com.edu.ulab.app.entity.Book;
 import com.edu.ulab.app.mapper.BookMapper;
 import com.edu.ulab.app.repository.BookRepository;
 import com.edu.ulab.app.service.BookService;
+import com.edu.ulab.app.validation.Validator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @Service
 public class BookServiceImpl implements BookService {
 
     private final BookRepository bookRepository;
-
     private final BookMapper bookMapper;
+    private final Validator validator;
 
-    public BookServiceImpl(BookRepository bookRepository,
-                           BookMapper bookMapper) {
+    public BookServiceImpl(BookRepository bookRepository, BookMapper bookMapper, Validator validator) {
         this.bookRepository = bookRepository;
         this.bookMapper = bookMapper;
+        this.validator = validator;
     }
 
     @Override
     public BookDto createBook(BookDto bookDto) {
         Book book = bookMapper.bookDtoToBook(bookDto);
-        log.info("Mapped book: {}", book);
         Book savedBook = bookRepository.save(book);
-        log.info("Saved book: {}", savedBook);
         return bookMapper.bookToBookDto(savedBook);
     }
 
     @Override
     public BookDto updateBook(BookDto bookDto) {
-        // реализовать недстающие методы
-        return null;
+        Long bookId = bookDto.getId();
+        validator.checkBookIdNotNull(Optional.ofNullable(bookId));
+        validator.checkBookNotNull(
+                bookRepository.findById(bookId), bookId
+        );
+
+        return bookMapper.bookToBookDto(
+                bookRepository.save(
+                        bookMapper.bookDtoToBook(bookDto)
+                )
+        );
     }
 
     @Override
     public BookDto getBookById(Long id) {
-        // реализовать недстающие методы
-        return null;
+        Book foundBook = validator.checkBookNotNull(
+                bookRepository.findById(id), id
+        );
+        return bookMapper.bookToBookDto(foundBook);
     }
 
     @Override
     public void deleteBookById(Long id) {
-        // реализовать недстающие методы
+        bookRepository.deleteById(id);
+    }
+
+    @Override
+    public List<Long> getListBookByUserId(Long userId) {
+        return validator.checkListBookIdNotNull(
+                bookRepository.getBooksByUserId(userId)
+        );
+    }
+
+    @Override
+    public void deleteBookByUserId(Long userId) {
+        bookRepository.deleteByUserId(userId);
     }
 }
