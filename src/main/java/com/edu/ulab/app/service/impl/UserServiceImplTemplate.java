@@ -2,30 +2,31 @@ package com.edu.ulab.app.service.impl;
 
 import com.edu.ulab.app.dto.UserDto;
 import com.edu.ulab.app.service.UserService;
+import com.edu.ulab.app.validation.Validator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.PreparedStatementCreator;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Service;
 
-import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.sql.SQLException;
 import java.util.Objects;
+import java.util.Optional;
 
 @Slf4j
 @Service
 public class UserServiceImplTemplate implements UserService {
-    private final JdbcTemplate jdbcTemplate;
 
-    public UserServiceImplTemplate(JdbcTemplate jdbcTemplate) {
+    private final JdbcTemplate jdbcTemplate;
+    private final Validator validator;
+
+    public UserServiceImplTemplate(JdbcTemplate jdbcTemplate, Validator validator) {
         this.jdbcTemplate = jdbcTemplate;
+        this.validator = validator;
     }
 
     @Override
     public UserDto createUser(UserDto userDto) {
-
         final String INSERT_SQL = "INSERT INTO PERSON(FULL_NAME, TITLE, AGE) VALUES (?,?,?)";
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(
@@ -43,18 +44,54 @@ public class UserServiceImplTemplate implements UserService {
 
     @Override
     public UserDto updateUser(UserDto userDto) {
-        // реализовать недстающие методы
-        return null;
+        final String INSERT_SQL = "UPDATE PERSON SET FULL_NAME = ?, TITLE = ?, AGE = ? WHERE id = ?";
+        KeyHolder keyHolder = new GeneratedKeyHolder();
+        final Long id = userDto.getId();
+        validator.checkPersonIdNotNull(Optional.ofNullable(id));
+        int status = jdbcTemplate.update(
+                connection -> {
+                    PreparedStatement ps = connection.prepareStatement(INSERT_SQL, new String[]{"id"});
+                    ps.setString(1, userDto.getFullName());
+                    ps.setString(2, userDto.getTitle());
+                    ps.setLong(3, userDto.getAge());
+                    ps.setLong(4, id);
+                    return ps;
+                }, keyHolder);
+        validator.checkPersonProcessed(status, id);
+        return userDto;
     }
 
     @Override
     public UserDto getUserById(Long id) {
-        // реализовать недстающие методы
-        return null;
+        final String SELECT_SQL = "SELECT ID, AGE, TITLE, FULL_NAME FROM PERSON WHERE ID = ?";
+        var res = jdbcTemplate.query(
+                connection -> {
+                    PreparedStatement ps = connection.prepareStatement(SELECT_SQL,
+                            new String[]{"ID", "AGE", "TITLE", "FULL_NAME"});
+                    ps.setLong(1, id);
+                    return ps;
+                },
+                (rs, rowNum) -> {
+                    UserDto newPerson = new UserDto();
+                    newPerson.setId(rs.getLong("ID"));
+                    newPerson.setFullName(rs.getString("FULL_NAME"));
+                    newPerson.setTitle(rs.getString("TITLE"));
+                    newPerson.setAge(rs.getInt("AGE"));
+                    return newPerson;
+                }
+        );
+        return validator.checkPersonExists(res, id);
     }
 
     @Override
     public void deleteUserById(Long id) {
-        // реализовать недстающие методы
+        final String DELETE_SQL = "DELETE from PERSON where ID = ?";
+        KeyHolder keyHolder = new GeneratedKeyHolder();
+        int status = jdbcTemplate.update(
+                connection -> {
+                    PreparedStatement ps = connection.prepareStatement(DELETE_SQL, new String[]{});
+                    ps.setLong(1, id);
+                    return ps;
+                }, keyHolder);
     }
 }
