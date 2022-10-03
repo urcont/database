@@ -37,11 +37,9 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserDto updateUser(UserDto userDto) {
         Long userId = userDto.getId();
-        validator.checkPersonIdNotNull(Optional.ofNullable(userId));
         validator.checkPersonNotNull(
                 userRepository.findById(userId), userId
         );
-
         return userMapper.personToUserDto(
                 userRepository.save(
                         userMapper.userDtoToPerson(userDto)

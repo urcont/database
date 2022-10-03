@@ -14,9 +14,9 @@ public interface BookRepository extends CrudRepository<Book, Long> {
 
     @Transactional
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    void deleteByUserId(Long userId);
+    void deleteByPerson(Long userId);
 
-    @Query("select b.id from Book b where b.userId = :userId")
+    @Query("select b.id from Book b where b.person.id = :userId")
     Optional <List<Long>> getBooksByUserId(Long userId);
 
 }
