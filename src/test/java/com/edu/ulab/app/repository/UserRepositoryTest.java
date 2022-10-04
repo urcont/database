@@ -4,15 +4,10 @@ import com.edu.ulab.app.config.SystemJpaTest;
 import com.edu.ulab.app.entity.Person;
 import com.edu.ulab.app.factory.UserBookTestFactory;
 import com.vladmihalcea.sql.SQLStatementCountValidator;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.jdbc.Sql;
-
-import static com.vladmihalcea.sql.SQLStatementCountValidator.*;
-import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Тесты репозитория {@link UserRepository}.
@@ -42,11 +37,8 @@ public class UserRepositoryTest {
         Person result = userRepository.save(person);
 
         //Then
-        assertThat(result.getAge()).isEqualTo(111);
-        assertSelectCount(1);
-        assertInsertCount(0);
-        assertUpdateCount(0);
-        assertDeleteCount(0);
+        UserBookTestFactory.assertUser(result, 100L, 111, "reader", "Test Test");
+        UserBookTestFactory.assertDmlCount(1, 0, 0, 0);
     }
 
     @DisplayName("Обновить юзера. Число select должно равняться 1")
@@ -58,17 +50,16 @@ public class UserRepositoryTest {
     })
     void updatePerson_thenAssertDmlCount() {
         //Given
-        Person person = UserBookTestFactory.getPerson(null, 111, "reader", "Test Test");
+        Long userId = 1L;
 
         //When
-        Person result = userRepository.save(person);
+        Person result = userRepository.findById(userId).orElse(new Person());
+        result.setAge(99);
+        result = userRepository.save(result);
 
         //Then
-        assertThat(result.getAge()).isEqualTo(111);
-        assertSelectCount(0);
-        assertInsertCount(0);
-        assertUpdateCount(0);
-        assertDeleteCount(0);
+        UserBookTestFactory.assertUser(result, 1L, 99, "user for book", "reader for book");
+        UserBookTestFactory.assertDmlCount(1, 0, 0, 0);
     }
 
     @DisplayName("Получить юзера. Число select должно равняться 1")
@@ -80,17 +71,14 @@ public class UserRepositoryTest {
     })
     void selectPerson_thenAssertDmlCount() {
         //Given
-        Person person = UserBookTestFactory.getPerson(null, 111, "reader", "Test Test");
+        Long userId = 1L;
 
         //When
-        Person result = userRepository.save(person);
+        Person result = userRepository.findById(userId).orElse(new Person());
 
         //Then
-        assertThat(result.getAge()).isEqualTo(111);
-        assertSelectCount(0);
-        assertInsertCount(0);
-        assertUpdateCount(0);
-        assertDeleteCount(0);
+        UserBookTestFactory.assertUser(result, 1L, 33, "user for book", "reader for book");
+        UserBookTestFactory.assertDmlCount(1, 0, 0, 0);
     }
 
     @DisplayName("Удалить юзера. Число select должно равняться 1")
@@ -102,17 +90,13 @@ public class UserRepositoryTest {
     })
     void deletePerson_thenAssertDmlCount() {
         //Given
-        Person person = UserBookTestFactory.getPerson(null, 111, "reader", "Test Test");
+        Long userId = 1L;
 
         //When
-        Person result = userRepository.save(person);
+        userRepository.deleteById(userId);
 
         //Then
-        assertThat(result.getAge()).isEqualTo(111);
-        assertSelectCount(0);
-        assertInsertCount(0);
-        assertUpdateCount(0);
-        assertDeleteCount(0);
+        UserBookTestFactory.assertDmlCount(1, 0, 0, 0);
     }
 
     // * failed

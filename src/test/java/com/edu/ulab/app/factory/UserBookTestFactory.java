@@ -5,6 +5,8 @@ import com.edu.ulab.app.dto.UserDto;
 import com.edu.ulab.app.entity.Book;
 import com.edu.ulab.app.entity.Person;
 
+import static com.vladmihalcea.sql.SQLStatementCountValidator.*;
+import static com.vladmihalcea.sql.SQLStatementCountValidator.assertDeleteCount;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -62,17 +64,22 @@ public class UserBookTestFactory {
     }
 
     public static void assertUser(Person person, Long id, Integer age, String fullName, String title) {
-        assertThat(person.getId()).isEqualTo(id);
         assertThat(person.getAge()).isEqualTo(age);
         assertThat(person.getFullName()).isEqualTo(fullName);
         assertThat(person.getTitle()).isEqualTo(title);
     }
 
     public static void assertBook(Book book, Long id, Person person, String author, String title, Integer pageCount) {
-        //assertThat(book.getId()).isEqualTo(id);
         assertThat(book.getPerson()).isEqualTo(person);
         assertThat(book.getAuthor()).isEqualTo(author);
         assertThat(book.getTitle()).isEqualTo(title);
         assertThat(book.getPageCount()).isEqualTo(pageCount);
+    }
+
+    public static void assertDmlCount(long selectCount, long insertCount, long updateCount, long deleteCount) {
+        assertSelectCount(selectCount);
+        assertInsertCount(insertCount);
+        assertUpdateCount(updateCount);
+        assertDeleteCount(deleteCount);
     }
 }
