@@ -10,7 +10,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Slf4j
 @Service
@@ -36,11 +35,9 @@ public class BookServiceImpl implements BookService {
     @Override
     public BookDto updateBook(BookDto bookDto) {
         Long bookId = bookDto.getId();
-        validator.checkBookIdNotNull(Optional.ofNullable(bookId));
         validator.checkBookNotNull(
                 bookRepository.findById(bookId), bookId
         );
-
         return bookMapper.bookToBookDto(
                 bookRepository.save(
                         bookMapper.bookDtoToBook(bookDto)
@@ -70,6 +67,6 @@ public class BookServiceImpl implements BookService {
 
     @Override
     public void deleteBookByUserId(Long userId) {
-        bookRepository.deleteByUserId(userId);
+        bookRepository.deleteByPersonId(userId);
     }
 }

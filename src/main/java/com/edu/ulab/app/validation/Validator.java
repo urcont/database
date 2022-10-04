@@ -56,13 +56,4 @@ public class Validator {
         return res.get();
     }
 
-    public void checkPersonIdNotNull(Optional<Long> res) {
-        if (res.isEmpty())
-            throw new PersonIdNullException("Person id is null");
-    }
-
-    public void checkBookIdNotNull(Optional<Long> res) {
-        if (res.isEmpty())
-            throw new BookIdNullException("Book id is null");
-    }
 }

@@ -5,17 +5,13 @@ import com.edu.ulab.app.service.BookService;
 import com.edu.ulab.app.validation.Validator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.PreparedStatementCreator;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Service;
 
-import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.sql.SQLException;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 
 @Slf4j
 @Service
@@ -31,7 +27,8 @@ public class BookServiceImplTemplate implements BookService {
 
     @Override
     public BookDto createBook(BookDto bookDto) {
-        final String INSERT_SQL = "INSERT INTO BOOK(TITLE, AUTHOR, PAGE_COUNT, USER_ID) VALUES (?,?,?,?)";
+        final String INSERT_SQL = "INSERT INTO ulab_edu.book(TITLE, AUTHOR, PAGE_COUNT, person_id, id) " +
+                "VALUES (?,?,?,?, nextval('sequenceBook'))";
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(
                 connection -> {
@@ -51,11 +48,10 @@ public class BookServiceImplTemplate implements BookService {
 
     @Override
     public BookDto updateBook(BookDto bookDto) {
-        final String INSERT_SQL = "UPDATE BOOK SET Title = ?, Author = ?, Page_Count = ?, User_Id = ?" +
+        final String INSERT_SQL = "UPDATE ulab_edu.book SET Title = ?, Author = ?, Page_Count = ?, person_id = ?" +
                 " WHERE id = ?";
         KeyHolder keyHolder = new GeneratedKeyHolder();
         final Long id = bookDto.getId();
-        validator.checkBookIdNotNull(Optional.ofNullable(id));
         int status = jdbcTemplate.update(
                 connection -> {
                     PreparedStatement ps = connection.prepareStatement(INSERT_SQL, new String[]{});
@@ -73,7 +69,7 @@ public class BookServiceImplTemplate implements BookService {
 
     @Override
     public BookDto getBookById(Long id) {
-        final String SELECT_SQL = "SELECT ID, TITLE, AUTHOR, PAGE_COUNT, USER_ID FROM BOOK WHERE ID = ?";
+        final String SELECT_SQL = "SELECT ID, TITLE, AUTHOR, PAGE_COUNT, person_id FROM ulab_edu.book WHERE ID = ?";
 
         var res = jdbcTemplate.query(
                 connection -> {
@@ -87,7 +83,7 @@ public class BookServiceImplTemplate implements BookService {
                     newBook.setId(rs.getLong("ID"));
                     newBook.setTitle(rs.getString("TITLE"));
                     newBook.setAuthor(rs.getString("AUTHOR"));
-                    newBook.setPageCount(rs.getLong("PAGE_COUNT"));
+                    newBook.setPageCount(rs.getInt("PAGE_COUNT"));
                     newBook.setUserId(rs.getLong("USER_ID"));
                     return newBook;
                 }
@@ -97,7 +93,7 @@ public class BookServiceImplTemplate implements BookService {
 
     @Override
     public void deleteBookById(Long id) {
-        final String DELETE_SQL = "DELETE from BOOK where ID = ?";
+        final String DELETE_SQL = "DELETE from ulab_edu.book where ID = ?";
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(
                 connection -> {
@@ -109,7 +105,7 @@ public class BookServiceImplTemplate implements BookService {
 
     @Override
     public List<Long> getListBookByUserId(Long userId) {
-        final String SELECT_SQL = "SELECT ID FROM BOOK WHERE USER_ID = ?";
+        final String SELECT_SQL = "SELECT ID FROM ulab_edu.book WHERE person_id = ?";
 
         return jdbcTemplate.query(
                 connection -> {
@@ -124,7 +120,7 @@ public class BookServiceImplTemplate implements BookService {
 
     @Override
     public void deleteBookByUserId(Long userId) {
-        final String DELETE_SQL = "DELETE from BOOK where USER_ID = ?";
+        final String DELETE_SQL = "DELETE from ulab_edu.book where person_id = ?";
         KeyHolder keyHolder = new GeneratedKeyHolder();
         int status = jdbcTemplate.update(
                 connection -> {
