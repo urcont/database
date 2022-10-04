@@ -5,7 +5,6 @@ import com.edu.ulab.app.service.UserService;
 import com.edu.ulab.app.validation.Validator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Service;
 
@@ -17,10 +16,12 @@ import java.util.Objects;
 public class UserServiceImplTemplate implements UserService {
 
     private final JdbcTemplate jdbcTemplate;
+    private final KeyHolderFactory keyHolderFactory;
     private final Validator validator;
 
-    public UserServiceImplTemplate(JdbcTemplate jdbcTemplate, Validator validator) {
+    public UserServiceImplTemplate(JdbcTemplate jdbcTemplate, KeyHolderFactory keyHolderFactory, Validator validator) {
         this.jdbcTemplate = jdbcTemplate;
+        this.keyHolderFactory = keyHolderFactory;
         this.validator = validator;
     }
 
@@ -28,7 +29,7 @@ public class UserServiceImplTemplate implements UserService {
     public UserDto createUser(UserDto userDto) {
         final String INSERT_SQL = "INSERT INTO ulab_edu.person(FULL_NAME, TITLE, AGE, ID) " +
                 "VALUES (?,?,?, nextval('sequenceUser'))";
-        KeyHolder keyHolder = new GeneratedKeyHolder();
+        KeyHolder keyHolder = keyHolderFactory.getKeyHolder();
 
         jdbcTemplate.update(
                 connection -> {
@@ -45,12 +46,12 @@ public class UserServiceImplTemplate implements UserService {
 
     @Override
     public UserDto updateUser(UserDto userDto) {
-        final String INSERT_SQL = "UPDATE ulab_edu.person SET FULL_NAME = ?, TITLE = ?, AGE = ? WHERE id = ?";
-        KeyHolder keyHolder = new GeneratedKeyHolder();
+        final String UPDATE_SQL = "UPDATE ulab_edu.person SET FULL_NAME = ?, TITLE = ?, AGE = ? WHERE id = ?";
+        KeyHolder keyHolder = keyHolderFactory.getKeyHolder();
         final Long id = userDto.getId();
         int status = jdbcTemplate.update(
                 connection -> {
-                    PreparedStatement ps = connection.prepareStatement(INSERT_SQL, new String[]{"id"});
+                    PreparedStatement ps = connection.prepareStatement(UPDATE_SQL, new String[]{"id"});
                     ps.setString(1, userDto.getFullName());
                     ps.setString(2, userDto.getTitle());
                     ps.setLong(3, userDto.getAge());
@@ -86,7 +87,7 @@ public class UserServiceImplTemplate implements UserService {
     @Override
     public void deleteUserById(Long id) {
         final String DELETE_SQL = "DELETE from ulab_edu.person where ID = ?";
-        KeyHolder keyHolder = new GeneratedKeyHolder();
+        KeyHolder keyHolder = keyHolderFactory.getKeyHolder();
         int status = jdbcTemplate.update(
                 connection -> {
                     PreparedStatement ps = connection.prepareStatement(DELETE_SQL, new String[]{});

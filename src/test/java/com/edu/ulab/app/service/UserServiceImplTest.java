@@ -47,21 +47,18 @@ public class UserServiceImplTest {
     @DisplayName("Создание пользователя. Должно пройти успешно.")
     void savePerson_Test() {
         //given
-
         UserDto userDto = UserBookTestFactory.getUserDto(null, 11, "test name", "test title");
         Person person  = UserBookTestFactory.getPerson(null, 11, "test name", "test title");
         Person savedPerson  = UserBookTestFactory.getPerson(1L, 11, "test name", "test title");
         UserDto result = UserBookTestFactory.getUserDto(1L, 11, "test name", "test title");
 
         //when
-
         when(userMapper.userDtoToPerson(userDto)).thenReturn(person);
         when(userRepository.save(person)).thenReturn(savedPerson);
         when(userMapper.personToUserDto(savedPerson)).thenReturn(result);
 
 
         //then
-
         UserDto userDtoResult = userService.createUser(userDto);
         UserBookTestFactory.assertUserDto(userDtoResult, 1L, 11, "test name", "test title");
     }

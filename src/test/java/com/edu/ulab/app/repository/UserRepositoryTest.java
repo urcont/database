@@ -13,6 +13,11 @@ import org.springframework.test.context.jdbc.Sql;
  * Тесты репозитория {@link UserRepository}.
  */
 @SystemJpaTest
+@Rollback
+@Sql({"classpath:sql/1_clear_schema.sql",
+        "classpath:sql/2_insert_person_data.sql",
+        "classpath:sql/3_insert_book_data.sql"
+})
 public class UserRepositoryTest {
     @Autowired
     UserRepository userRepository;
@@ -22,13 +27,8 @@ public class UserRepositoryTest {
         SQLStatementCountValidator.reset();
     }
 
-    @DisplayName("Сохранить юзера. Число select должно равняться 1")
+    @DisplayName("Сохранить юзера. Число select должно равняться 1, insert 1")
     @Test
-    @Rollback
-    @Sql({"classpath:sql/1_clear_schema.sql",
-            "classpath:sql/2_insert_person_data.sql",
-            "classpath:sql/3_insert_book_data.sql"
-    })
     void insertPerson_thenAssertDmlCount() {
         //Given
         Person person = UserBookTestFactory.getPerson(null, 111, "reader", "Test Test");
@@ -37,17 +37,13 @@ public class UserRepositoryTest {
         Person result = userRepository.save(person);
 
         //Then
+        userRepository.flush();
         UserBookTestFactory.assertUser(result, 100L, 111, "reader", "Test Test");
-        UserBookTestFactory.assertDmlCount(1, 0, 0, 0);
+        UserBookTestFactory.assertDmlCount(1, 1, 0, 0);
     }
 
-    @DisplayName("Обновить юзера. Число select должно равняться 1")
+    @DisplayName("Обновить юзера. Число select должно равняться 1, update 1")
     @Test
-    @Rollback
-    @Sql({"classpath:sql/1_clear_schema.sql",
-            "classpath:sql/2_insert_person_data.sql",
-            "classpath:sql/3_insert_book_data.sql"
-    })
     void updatePerson_thenAssertDmlCount() {
         //Given
         Long userId = 1L;
@@ -58,17 +54,13 @@ public class UserRepositoryTest {
         result = userRepository.save(result);
 
         //Then
+        userRepository.flush();
         UserBookTestFactory.assertUser(result, 1L, 99, "user for book", "reader for book");
-        UserBookTestFactory.assertDmlCount(1, 0, 0, 0);
+        UserBookTestFactory.assertDmlCount(1, 0, 1, 0);
     }
 
     @DisplayName("Получить юзера. Число select должно равняться 1")
     @Test
-    @Rollback
-    @Sql({"classpath:sql/1_clear_schema.sql",
-            "classpath:sql/2_insert_person_data.sql",
-            "classpath:sql/3_insert_book_data.sql"
-    })
     void selectPerson_thenAssertDmlCount() {
         //Given
         Long userId = 1L;
@@ -77,17 +69,13 @@ public class UserRepositoryTest {
         Person result = userRepository.findById(userId).orElse(new Person());
 
         //Then
+        userRepository.flush();
         UserBookTestFactory.assertUser(result, 1L, 33, "user for book", "reader for book");
         UserBookTestFactory.assertDmlCount(1, 0, 0, 0);
     }
 
-    @DisplayName("Удалить юзера. Число select должно равняться 1")
+    @DisplayName("Удалить юзера. Число select должно равняться 1, delete 1")
     @Test
-    @Rollback
-    @Sql({"classpath:sql/1_clear_schema.sql",
-            "classpath:sql/2_insert_person_data.sql",
-            "classpath:sql/3_insert_book_data.sql"
-    })
     void deletePerson_thenAssertDmlCount() {
         //Given
         Long userId = 1L;
@@ -96,7 +84,8 @@ public class UserRepositoryTest {
         userRepository.deleteById(userId);
 
         //Then
-        UserBookTestFactory.assertDmlCount(1, 0, 0, 0);
+        userRepository.flush();
+        UserBookTestFactory.assertDmlCount(1, 0, 0, 1);
     }
 
     // * failed
